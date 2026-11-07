@@ -187,7 +187,7 @@ the `USERNAME` ARG in the `Dockerfile` **and** `AllowUsers` in
 
 | Symptom | Likely cause / fix |
 |---------|--------------------|
-| `Permission denied (publickey)` | `k8s/authorized_keys` empty or wrong key; check `kubectl logs` for the "WARNING: ... authorized_keys is empty" line |
+| `Permission denied (publickey)` | Wrong/empty key, or `-i` pointing at a `.pub` instead of the **private** key. Check `kubectl logs`: `WARNING: ... authorized_keys is empty` means the key wasn't mounted; `bad ownership or modes for directory` is sshd StrictModes rejecting a group/world-writable Secret mount — this manifest mounts the key via `subPath` into an image-owned dir to avoid that |
 | Tunnel connects but SSH hangs | NodePort not reachable from your network, or a proxy stripping WebSocket upgrades |
 | `connection reset` on connect | Pod not ready yet (`kubectl get pods -n kubepivot`), or `--restrict-to` mismatch |
 | Pod `CrashLoopBackOff` | `kubectl logs -n kubepivot deploy/kubepivot` — usually Apache module or cert issue |

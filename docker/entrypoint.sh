@@ -35,10 +35,11 @@ chmod 600 "$SSH_WRITABLE"/ssh_host_*_key
 chmod 644 "$SSH_WRITABLE"/ssh_host_*.pub
 
 # --- Warn if no authorized_keys was mounted ----------------------------------
+# The key is mounted (via subPath) at this path from the Kubernetes Secret.
 AUTH_KEYS="/etc/kubepivot/ssh/authorized_keys"
 if [ ! -s "$AUTH_KEYS" ]; then
-  echo "[!] WARNING: $AUTH_KEYS is empty or missing."
-  echo "[!] No one will be able to log in. Mount your public key via the Secret (see k8s/)."
+  echo "[!] WARNING: $AUTH_KEYS is empty or missing — no one will be able to log in."
+  echo "[!] Provide your public key via the Secret (see k8s/)."
 fi
 
 # --- Service launcher --------------------------------------------------------

@@ -18,7 +18,9 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
         runAsGroup: 1000
-        fsGroup: 1000
+        # No fsGroup on purpose: it makes the mounted Secret group-writable,
+        # which sshd StrictModes rejects ("bad ownership or modes for directory").
+        # The key is mounted world-readable (0444), so fsGroup isn't needed.
       containers:
         - name: kubepivot
           image: kubepivot:latest
@@ -40,9 +42,14 @@ spec:
               containerPort: 2222
               protocol: TCP
           volumeMounts:
-            # Your SSH public key(s), mounted read-only from the Secret.
+            # Your SSH public key(s) from the Secret, mounted read-only as a
+            # SINGLE FILE via subPath. subPath keeps the parent directory the
+            # image's own root:root 0755 dir, so sshd StrictModes accepts it —
+            # a normal Secret volume mount dir can be group/world-writable and
+            # is rejected ("bad ownership or modes for directory").
             - name: ssh-authorized-keys
-              mountPath: /etc/kubepivot/ssh
+              mountPath: /etc/kubepivot/ssh/authorized_keys
+              subPath: authorized_keys
               readOnly: true
           readinessProbe:
             tcpSocket:
