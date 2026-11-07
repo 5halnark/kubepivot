@@ -69,32 +69,32 @@ kubepivot/
 ## Prerequisites
 
 - A Kubernetes cluster and `kubectl` (with `kustomize` built in — any modern `kubectl`).
-- Docker (or Podman/Buildah) to build the image.
 - The [`wstunnel`](https://github.com/erebe/wstunnel/releases) **client** on your
   machine to connect (v10.x recommended; the image bundles the matching server).
 - An SSH key pair (`ssh-keygen -t ed25519`).
+- Docker (or Podman/Buildah) **only if you build your own image** — not needed
+  for the default deploy, which pulls a prebuilt public image.
 
 ---
 
 ## Quick start
 
+The default manifest pulls a prebuilt **public image** from GHCR, so you need
+only `kubectl` and your SSH key — no Docker, no local build.
+
 ```bash
-# 1. Provide your SSH public key
+# 1. Clone
+git clone https://github.com/5halnark/kubepivot.git
+cd kubepivot
+
+# 2. Provide your SSH public key
 cp k8s/authorized_keys.example k8s/authorized_keys
 cat ~/.ssh/id_ed25519.pub >> k8s/authorized_keys     # your PUBLIC key
 
-# 2. Build the image and make it available to the cluster
-#    (pick ONE depending on your cluster)
-./scripts/build-image.sh                      # plain docker build
-LOADER=kind     ./scripts/build-image.sh      # kind
-LOADER=minikube ./scripts/build-image.sh      # minikube
-# or push to a registry and set the image in k8s/kustomization.yaml:
-IMAGE=ghcr.io/<you>/kubepivot:1.0.0 PUSH=1 ./scripts/build-image.sh
-
-# 3. Deploy
+# 3. Deploy  (pulls ghcr.io/5halnark/kubepivot:latest)
 kubectl apply -k k8s/
 
-# 4. Connect (replace with a node IP/host that exposes the NodePort)
+# 4. Connect  (node IP/host that exposes the NodePort)
 ./scripts/connect.sh <node-ip> 30443
 # -> you land in a shell as 'pentester' inside the pod
 ```
@@ -102,6 +102,28 @@ kubectl apply -k k8s/
 That's it. To rotate the key later: edit `k8s/authorized_keys`, run
 `kubectl apply -k k8s/` again — the content hash changes and the pod rolls
 automatically.
+
+## Building your own image (optional)
+
+You only need this to **change the image** (toolset, login name) or to run on a
+cluster that can't reach GHCR (air-gapped, or a local single-node cluster).
+
+```bash
+# Local single-node cluster — build and load onto the node, no registry:
+LOADER=kind     ./scripts/build-image.sh      # or LOADER=minikube
+#   then set the image back to the local name in k8s/kustomization.yaml:
+#   newName: kubepivot   newTag: latest
+
+# Your own registry / fork:
+IMAGE=ghcr.io/<you>/kubepivot:1.0.0 PUSH=1 ./scripts/build-image.sh
+#   then point k8s/kustomization.yaml at that image.
+```
+
+Pushing to `main` (or a `v*` tag) triggers
+[`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml),
+which rebuilds and publishes the image to `ghcr.io/<owner>/kubepivot`
+automatically. Make the GHCR package **Public** once so clusters can pull it
+without an `imagePullSecret`.
 
 ---
 
@@ -169,7 +191,7 @@ the `USERNAME` ARG in the `Dockerfile` **and** `AllowUsers` in
 | Tunnel connects but SSH hangs | NodePort not reachable from your network, or a proxy stripping WebSocket upgrades |
 | `connection reset` on connect | Pod not ready yet (`kubectl get pods -n kubepivot`), or `--restrict-to` mismatch |
 | Pod `CrashLoopBackOff` | `kubectl logs -n kubepivot deploy/kubepivot` — usually Apache module or cert issue |
-| Image not found | Build + load it onto the node, or set a registry image in `kustomization.yaml` |
+| `ImagePullBackOff` / image not found | Make the GHCR package **Public**, or build/load your own image (see "Building your own image") and point `kustomization.yaml` at it |
 
 ```bash
 kubectl get pods -n kubepivot

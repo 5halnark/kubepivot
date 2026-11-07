@@ -22,10 +22,11 @@ secretGenerator:
     files:
       - authorized_keys=authorized_keys
 
-# Point this at wherever your image lives.
-#   local cluster (kind/minikube):  kubepivot:latest  (load it onto the node)
-#   registry:                       ghcr.io/<your-org>/kubepivot:1.0.0
+# Image to deploy. Default is the public GHCR image, so any cluster can pull
+# it with no local build. Override for a fork or a local-only build:
+#   local cluster (kind/minikube):  newName: kubepivot      (load it onto the node)
+#   your fork:                       newName: ghcr.io/<you>/kubepivot
 images:
   - name: kubepivot
-    newName: kubepivot
+    newName: ghcr.io/5halnark/kubepivot
     newTag: latest
