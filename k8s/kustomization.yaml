@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# ----------------------------------------------------------------------------
+# Everything you normally need to change is in THIS file.
+# 1. Drop your SSH public key into k8s/authorized_keys  (cp from the .example)
+# 2. (optional) change the namespace / image below
+# 3. kubectl apply -k k8s/
+# ----------------------------------------------------------------------------
+
+namespace: kubepivot
+
+resources:
+  - namespace.yaml
+  - service.yaml
+  - deployment.yaml
+
+# Your authorized_keys file becomes a Secret mounted into the pod.
+# Editing the file + re-applying rolls the pod automatically (content hash).
+secretGenerator:
+  - name: kubepivot-ssh
+    files:
+      - authorized_keys=authorized_keys
+
+# Point this at wherever your image lives.
+#   local cluster (kind/minikube):  kubepivot:latest  (load it onto the node)
+#   registry:                       ghcr.io/<your-org>/kubepivot:1.0.0
+images:
+  - name: kubepivot
+    newName: kubepivot
+    newTag: latest

@@ -1,0 +1,11 @@
+.git
+.gitignore
+README.md
+LICENSE
+docs/
+k8s/
+scripts/
+*.md
+*.tar
+*.tar.gz
+blobs/

@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubepivot
+  labels:
+    app: kubepivot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubepivot
+  template:
+    metadata:
+      labels:
+        app: kubepivot
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: kubepivot
+          image: kubepivot:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: WS_TUNNEL_PORT
+              value: "30000"
+            - name: SSH_PORT
+              value: "2222"
+            - name: DOMAIN_NAME
+              value: "localhost"
+            # - name: DEBUG
+            #   value: "true"
+          ports:
+            - name: https
+              containerPort: 8443
+              protocol: TCP
+            - name: ssh
+              containerPort: 2222
+              protocol: TCP
+          volumeMounts:
+            # Your SSH public key(s), mounted read-only from the Secret.
+            - name: ssh-authorized-keys
+              mountPath: /etc/kubepivot/ssh
+              readOnly: true
+          readinessProbe:
+            tcpSocket:
+              port: 8443
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8443
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "2"
+              memory: "2Gi"
+      volumes:
+        - name: ssh-authorized-keys
+          secret:
+            secretName: kubepivot-ssh
+            defaultMode: 0444

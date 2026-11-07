@@ -1,0 +1,32 @@
+Port 2222
+Protocol 2
+
+# Key-based auth only. No root, no passwords.
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+ChallengeResponseAuthentication no
+PubkeyAuthentication yes
+
+# Host keys live on the writable (ephemeral) tree, generated at first start.
+HostKey /writable/etc/ssh/ssh_host_ed25519_key
+HostKey /writable/etc/ssh/ssh_host_ecdsa_key
+HostKey /writable/etc/ssh/ssh_host_rsa_key
+
+# Authorized keys are mounted from a Kubernetes Secret (root-owned, read-only).
+AuthorizedKeysFile /etc/kubepivot/ssh/authorized_keys
+StrictModes yes
+
+UsePAM yes
+X11Forwarding no
+
+# Needed so you can port-forward / pivot through this box.
+AllowTcpForwarding yes
+PermitTunnel yes
+GatewayPorts no
+
+ClientAliveInterval 120
+ClientAliveCountMax 2
+
+AllowUsers pentester
+LogLevel VERBOSE

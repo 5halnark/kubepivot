@@ -1,0 +1,23 @@
+# --- Secrets & keys: NEVER commit -------------------------------------------
+k8s/authorized_keys
+authorized_keys
+*.key
+*.pem
+tls.crt
+tls.key
+ssh_host_*
+
+# --- Built image artifacts (huge, rebuild from the Dockerfile instead) ------
+*.tar
+*.tar.gz
+blobs/
+oci-layout
+repositories
+# OCI layout index/manifest at repo root (keep k8s manifests, ignore image ones)
+/index.json
+/manifest.json
+
+# --- Misc -------------------------------------------------------------------
+.env
+.DS_Store
+*.log

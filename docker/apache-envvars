@@ -1,0 +1,6 @@
+export APACHE_RUN_USER=pentester
+export APACHE_RUN_GROUP=pentester
+export APACHE_PID_FILE=/writable/var/run/apache/apache2.pid
+export APACHE_RUN_DIR=/writable/var/run/apache
+export APACHE_LOCK_DIR=/writable/var/lock/apache
+export APACHE_LOG_DIR=/writable/var/log/apache
